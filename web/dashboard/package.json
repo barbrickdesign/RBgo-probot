@@ -7,7 +7,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build --outDir=../dist --emptyOutDir",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "clean": "rm -rf ../dist node_modules/.vite"
   },
   "dependencies": {
     "@ant-design/icons": "^4.8.0",
