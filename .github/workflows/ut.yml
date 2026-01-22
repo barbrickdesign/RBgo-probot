@@ -16,22 +16,56 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.19', '1.20', '1.21']
     defaults:
       run:
         working-directory: ./src/github.com/${{ github.repository }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           path: ./src/github.com/${{ github.repository }}
+      
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: 1.19
+          go-version: ${{ matrix.go-version }}
+          cache-dependency-path: ./src/github.com/${{ github.repository }}/go.sum
+      
       - name: Cache Go modules
-        uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-      - name: Test
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+            ${{ runner.os }}-go-
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Verify dependencies
+        run: go mod verify
+      
+      - name: Run go vet
+        run: go vet ./...
+      
+      - name: Run tests
         run: make test
+      
+      - name: Run tests with coverage
+        if: matrix.go-version == '1.19' # Run coverage only once to avoid duplicate reports
+        run: make coverage
+      
+      - name: Upload coverage to Codecov
+        if: matrix.go-version == '1.19' # Upload coverage only once
+        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # v4.0.1
+        with:
+          file: ./src/github.com/${{ github.repository }}/coverage.out
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false

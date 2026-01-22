@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build --outDir=../dist --emptyOutDir",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf ../dist node_modules/.vite"
   },
   "dependencies": {
     "@ant-design/icons": "^4.8.0",
